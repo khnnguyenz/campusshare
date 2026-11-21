@@ -21,7 +21,7 @@ function pic(i){if(i.imgs&&i.imgs[0])return i.imgs[0];const k=CATS.indexOf(i.cat
 
 function logo(sz){return `<svg width="${sz}" height="${sz}" viewBox="0 0 48 48" style="flex:none"><defs><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F5A524"/><stop offset="1" stop-color="#F27A45"/></linearGradient></defs><rect width="48" height="48" rx="13" fill="url(#lgg)"/><path d="M24 11L13 19M24 11L35 19M13 19L35 19" stroke="#111" stroke-width="2" stroke-linecap="round" fill="none"/><g fill="#111"><circle cx="24" cy="10" r="3.4"/><circle cx="13" cy="19" r="3.4"/><circle cx="35" cy="19" r="3.4"/></g><path d="M8 27c6-3 12-3 16 1 4-4 10-4 16-1v12c-6-3-12-3-16 1-4-4-10-4-16-1z" fill="#111"/><path d="M24 28v12" stroke="#F5A524" stroke-width="2"/></svg>`}
 
-function av(u,s=40){const c=['#F27A45','#F5A524','#B45309','#EA580C','#D97706'][(u.id.charCodeAt(u.id.length-1)||0)%5];return u.avatar?`<img class="avi" style="width:${s}px;height:${s}px" src="${u.avatar}" alt="">`:`<span class="avi" style="width:${s}px;height:${s}px;background:${c};font-size:${Math.round(s*.42)}px">${esc(u.name.trim().charAt(0).toUpperCase())}</span>`}
+function av(u,s=40){const c=['#F27A45','#F5A524','#B45309','#EA580C','#D97706'][((u.id||'x').charCodeAt((u.id||'x').length-1)||0)%5];return u.avatar?`<img class="avi" style="width:${s}px;height:${s}px" src="${u.avatar}" alt="">`:`<span class="avi" style="width:${s}px;height:${s}px;background:${c};font-size:${Math.round(s*.42)}px">${esc((u.name||'?').trim().charAt(0).toUpperCase())}</span>`}
 
 function toggleTheme(){const r=document.documentElement;r.dataset.theme=(r.dataset.theme||'dark')=='dark'?'light':'dark';try{localStorage.setItem('cs_theme',r.dataset.theme)}catch(e){}}
 

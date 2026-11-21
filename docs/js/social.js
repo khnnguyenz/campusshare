@@ -14,7 +14,7 @@ function rmF(id){const r=rel(cur.id,id);if(r){friends=friends.filter(x=>x!==r);s
 
 function unF(id){if(confirm('Hủy kết bạn?'))rmF(id)}
 
-function frs(){return friends.filter(r=>r.st=='accepted'&&(r.a==cur.id||r.b==cur.id)).map(r=>r.a==cur.id?r.b:r.a)}
+function frs(){return friends.filter(r=>r.st=='accepted'&&(r.a==cur.id||r.b==cur.id)).map(r=>r.a==cur.id?r.b:r.a).filter(id=>USERS[id])}
 
 function thread(id){return msgs.filter(m=>(m.f==cur.id&&m.t==id)||(m.f==id&&m.t==cur.id))}
 
@@ -37,9 +37,9 @@ function userBaseView(){const u=USERS[viewId];if(!u)return '<p class="mu">Không
 
 function userV(){const h=userBaseView();return viewId&&USERS[viewId]?h.replace('</h2>','</h2>'+presTxt(viewId)):h}
 
-function prow(id){const u=USERS[id];return `<div class="card row" style="margin-bottom:8px"><a class="row" style="gap:10px;cursor:pointer" onclick="openUser('${id}')">${av(u,44)}<span><b>${esc(u.name)}</b> ${presTxt(id)}<br><span class="mu">${esc(u.school||'')} · ${esc(u.cls||'—')}</span></span></a><span>${fbtn(id)}</span></div>`}
+function prow(id){const u=USERS[id];if(!u)return '';return `<div class="card row" style="margin-bottom:8px"><a class="row" style="gap:10px;cursor:pointer" onclick="openUser('${id}')">${av(u,44)}<span><b>${esc(u.name)}</b> ${presTxt(id)}<br><span class="mu">${esc(u.school||'')} · ${esc(u.cls||'—')}</span></span></a><span>${fbtn(id)}</span></div>`}
 
-function plist(){return Object.values(USERS).filter(u=>u.role=='student'&&u.id!=cur.id&&(!fsq||u.name.toLowerCase().includes(fsq.toLowerCase()))).map(u=>prow(u.id)).join('')||'<p class="mu">Không tìm thấy học sinh.</p>'}
+function plist(){return Object.values(USERS).filter(u=>u.id&&u.role=='student'&&u.id!=cur.id&&(!fsq||u.name.toLowerCase().includes(fsq.toLowerCase()))).map(u=>prow(u.id)).join('')||'<p class="mu">Không tìm thấy học sinh.</p>'}
 
 function friendsV(){if(!cur||cur.role!='student')return '<p class="mu">Hãy đăng nhập tài khoản học sinh.</p>';const inc=friends.filter(r=>r.st=='pending'&&r.b==cur.id),fr=frs();return `<h2>Bạn bè</h2>${inc.length?`<h3>Lời mời kết bạn (${inc.length})</h3>${inc.map(r=>prow(r.a)).join('')}`:''}<h3>Bạn bè của tôi (${fr.length})</h3>${fr.map(id=>prow(id)).join('')||'<p class="mu">Chưa có bạn bè. Tìm học sinh bên dưới để kết bạn.</p>'}<h3>Tìm học sinh</h3><div class="se" style="margin-bottom:12px">🔍<input placeholder="Tìm theo tên…" oninput="fsq=this.value;$('#plist').innerHTML=plist()"></div><div id="plist">${plist()}</div>`}
 

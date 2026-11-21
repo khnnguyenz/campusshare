@@ -79,7 +79,7 @@
   function startAuthData(uid,adm){stopAuthData();D.forEach(d=>{if(d.sc=='auth'||d.sc=='own'||(d.sc=='adm'&&adm))listen(d,uid)});unPres=onSnapshot(collection(db,'presence'),s=>{presMap={};s.docs.forEach(x=>presMap[x.id]=x.data());refreshPz()},e=>console.error('presence',e.code))}
   function stopAuthData(){D.forEach(d=>{if(d.sc!='pub'){d.un.forEach(f=>f());d.un=[];d.init=false}});if(unPres){unPres();unPres=null}}
   D.forEach(d=>{if(d.sc=='pub')listen(d)});
-  onSnapshot(collection(db,'users'),s=>{s.docs.forEach(x=>{USERS[x.id]=Object.assign(USERS[x.id]||{},x.data())});soft('users')},e=>console.error('users',e.code));
+  onSnapshot(collection(db,'users'),s=>{s.docs.forEach(x=>{USERS[x.id]=Object.assign(USERS[x.id]||{},x.data(),{id:x.id})});soft('users')},e=>console.error('users',e.code));
 
   /* ---------- đăng nhập / đăng ký ---------- */
   let pending=null;
@@ -110,7 +110,7 @@
       const ref=doc(db,'users',u.uid),snap=await getDoc(ref);let data;
       if(snap.exists())data=snap.data();
       else{const p=pending||{};data={id:u.uid,name:p.name||u.email.split('@')[0],role:'student',school:p.school||'—',cls:p.cls||'—',pts:0,bio:''};await setDoc(ref,data)}
-      pending=null;USERS[u.uid]=Object.assign(USERS[u.uid]||{},data);
+      pending=null;USERS[u.uid]=Object.assign(USERS[u.uid]||{},data,{id:u.uid});
       startAuthData(u.uid,data.role=='super');login(u.uid);applyFav();
     }catch(e){fail(e)}
   });
