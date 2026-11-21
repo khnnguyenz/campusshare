@@ -1,100 +1,86 @@
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{db}/documents {
-   
+  match /databases/{database}/documents {
+
     function signedIn() { return request.auth != null; }
-    function role() { return request.auth.token.role; }
-    function isSuper() { return signedIn() && role() == 'super'; }
-    function isSchoolAdmin(schoolId) { return signedIn() && role() == 'admin' && request.auth.token.schoolId == schoolId; }
-    function sameSchool(schoolId) { return signedIn() && request.auth.token.schoolId == schoolId; }
-    function unchanged(fields) { return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields); }
-    function isMe(uid) { return signedIn() && request.auth.uid == uid; }
-
-    match /users/{uid} {
-      allow read: if isMe(uid) || isSuper() || isSchoolAdmin(resource.data.schoolId);
-      allow create: if isMe(uid) && request.resource.data.role == 'student'
-        && request.resource.data.greenPoints == 0 && request.resource.data.verified == false;
-      allow update: if (isMe(uid) && unchanged(['role','schoolId','greenPoints','verified','locked','badges']))
-        || isSchoolAdmin(resource.data.schoolId) && unchanged(['role','schoolId','greenPoints'])
-        || isSuper();
-      allow delete: if isSuper();
+    function uid() { return request.auth.uid; }
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(uid()))
+        && get(/databases/$(database)/documents/users/$(uid())).data.role == 'super';
     }
+    // Chỉ cho phép thay đổi đúng các trường này
+    function only(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
 
-    match /schools/{id} {
-      allow read: if signedIn();
-      allow write: if isSuper();
-    }
-    match /categories/{id} {
+    // Hồ sơ người dùng: ai cũng xem được tên/trường/lớp; chỉ tự sửa hồ sơ mình, KHÔNG tự đổi role
+    match /users/{id} {
       allow read: if true;
-      allow write: if isSuper() || (signedIn() && role() == 'admin');
+      allow create: if signedIn() && uid() == id && request.resource.data.role == 'student';
+      allow update: if (signedIn() && uid() == id && request.resource.data.role == resource.data.role) || isAdmin();
+      allow delete: if isAdmin();
     }
 
+    // Đồ dùng: chủ bài được sửa/xóa; người khác chỉ được tăng lượt xem
     match /items/{id} {
-      allow read: if signedIn() && sameSchool(resource.data.schoolId) || isSuper();
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid
-        && sameSchool(request.resource.data.schoolId)
-        && request.resource.data.status == 'Available'
-        && request.resource.data.images.size() <= 5
-        && request.resource.data.name is string && request.resource.data.name.size() >= 3;
-
-      allow update: if (resource.data.ownerId == request.auth.uid && unchanged(['ownerId','schoolId','status']))
-        || isSchoolAdmin(resource.data.schoolId) || isSuper();
-      allow delete: if resource.data.ownerId == request.auth.uid || isSchoolAdmin(resource.data.schoolId) || isSuper();
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.owner == uid();
+      allow update: if signedIn() && (resource.data.owner == uid() || only(['views']) || isAdmin());
+      allow delete: if signedIn() && (resource.data.owner == uid() || isAdmin());
     }
 
-
+    // Yêu cầu mượn: người mượn tạo; hai bên tham gia cập nhật
     match /borrowRequests/{id} {
-      allow read: if signedIn() && (resource.data.borrowerId == request.auth.uid
-        || resource.data.ownerId == request.auth.uid || isSchoolAdmin(resource.data.schoolId)) || isSuper();
-      allow create: if signedIn() && request.resource.data.borrowerId == request.auth.uid
-        && request.resource.data.status == 'Pending' && request.resource.data.ownerId != request.auth.uid;
-      allow update, delete: if false;
-    }
-
-
-    match /transactions/{id} {
-      allow read: if signedIn() && (request.auth.uid in resource.data.participants
-        || isSchoolAdmin(resource.data.schoolId)) || isSuper();
-      allow write: if false;
-    }
-
-    match /notifications/{id} {
-      allow read: if signedIn() && resource.data.userId == request.auth.uid;
-      allow update: if signedIn() && resource.data.userId == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
-      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
-      allow create: if false;
-    }
-
-
-    match /reviews/{id} {
       allow read: if signedIn();
-      allow create: if signedIn() && id == request.resource.data.transactionId + '_' + request.auth.uid
-        && request.resource.data.reviewerId == request.auth.uid
-        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5;
+      allow create: if signedIn() && request.resource.data['from'] == uid() && request.resource.data.st == 'Pending';
+      allow update: if signedIn() && (resource.data['from'] == uid() || resource.data.to == uid() || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Đánh giá: mỗi người chỉ một đánh giá cho mỗi giao dịch (ID = giaodich_nguoidanhgia), không sửa/xóa
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.by == uid()
+        && request.resource.data.stars >= 1 && request.resource.data.stars <= 5
+        && id == request.resource.data.r + '_' + uid();
       allow update, delete: if false;
     }
 
-    match /reports/{id} {
-      allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid;
-      allow read: if signedIn() && resource.data.reporterId == request.auth.uid
-        || isSchoolAdmin(resource.data.schoolId) || isSuper();
-      allow update: if isSchoolAdmin(resource.data.schoolId) || isSuper();
+    // Thông báo: chỉ người nhận đọc/sửa/xóa; ai đăng nhập cũng gửi được
+    match /notifications/{id} {
+      allow read, update, delete: if signedIn() && resource.data.to == uid();
+      allow create: if signedIn();
+    }
+
+    match /friendships/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.a == uid();
+      allow update, delete: if signedIn() && (resource.data.a == uid() || resource.data.b == uid());
+    }
+
+    // Tin nhắn: chỉ hai người trong cuộc đọc được; người nhận chỉ được đánh dấu đã đọc
+    match /messages/{id} {
+      allow read: if signedIn() && (resource.data.f == uid() || resource.data.t == uid());
+      allow create: if signedIn() && request.resource.data.f == uid();
+      allow update: if signedIn() && resource.data.t == uid() && only(['r']);
       allow delete: if false;
     }
 
-    match /favorites/{id} {
-      allow read, write: if signedIn() && (resource == null ? request.resource.data.userId : resource.data.userId) == request.auth.uid;
-    }
     match /needs/{id} {
-      allow read: if signedIn() && resource.data.userId == request.auth.uid || isSuper();
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.user == uid();
+      allow update, delete: if signedIn() && resource.data.user == uid();
     }
 
-    match /pointsHistory/{id} {
-      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isSchoolAdmin(resource.data.schoolId)) || isSuper();
-      allow write: if false;
+    // Báo cáo: ai cũng gửi được, chỉ admin xem và xử lý
+    match /reports/{id} {
+      allow create: if signedIn() && request.resource.data.by == uid();
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Trạng thái online
+    match /presence/{id} {
+      allow read: if signedIn();
+      allow write: if signedIn() && uid() == id;
     }
   }
 }

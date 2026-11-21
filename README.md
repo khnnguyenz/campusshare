@@ -1,89 +1,70 @@
-# CampusShare – Hướng dẫn cấu hình & triển khai
+# CampusShare
 
-> **Chạy thử:** mở file `site/index.html` bằng trình duyệt (Chrome/Edge/Firefox...). Tài khoản quản trị duy nhất: `admin` / `admin123`.
->
-> ⚠️ **Bảo mật:** mật khẩu admin nằm trong `site/js/config.js` (phía trình duyệt) nên ai xem mã cũng thấy, và dữ liệu chỉ lưu trên từng trình duyệt.
+Nền tảng chia sẻ đồ dùng học tập cho học sinh THPT.
+
+> **Chạy thử ngay:** mở file `site/index.html` bằng Chrome/Edge. Khi chưa điền Firebase, website lưu dữ liệu **trên trình duyệt của bạn** (chỉ để thử, người khác không thấy). Điền Firebase theo hướng dẫn bên dưới để lưu dữ liệu dùng chung cho cả trường.
 
 ## Cấu trúc thư mục
 
 ```
 campusshare/
-├── site/                  ← Toàn bộ website
-│   ├── index.html         ← Khung trang, nạp các file CSS và JS
-│   ├── css/
-│   │   ├── theme.css      ← Màu sắc: chế độ tối (mặc định) và sáng
-│   │   ├── base.css       ← Nền tảng: khung trang, nút, form, thẻ, popup
-│   │   ├── components.css ← Ảnh, animation, FAQ
-│   │   └── pages.css      ← Giao diện từng trang (kho đồ, đăng nhập, chat, thông báo)
-│   └── js/                ← Mã chạy theo thứ tự nạp trong index.html
-│       ├── config.js      ← Tài khoản admin, danh mục, ảnh nền đăng nhập
-│       ├── state.js       ← Biến trạng thái toàn cục
-│       ├── utils.js       ← Tiện ích: toast, popup, ảnh, logo, avatar, theme
-│       ├── storage.js     ← Lưu/đọc dữ liệu (localStorage) → CHỖ SẼ THAY bằng Firebase
-│       ├── router.js      ← Điều hướng và vẽ khung trang
-│       ├── auth.js        ← Đăng nhập, đăng ký, quên mật khẩu, giữ đăng nhập
-│       ├── market.js      ← Kho đồ dùng, đăng/sửa/xóa bài, ảnh, báo cáo
-│       ├── borrow.js      ← Mượn trả, giao dịch, QR, đánh giá
-│       ├── needs.js       ← Nhu cầu của tôi, gợi ý thông minh
-│       ├── notifications.js ← Thông báo, chuông đỏ, âm thanh
-│       ├── social.js      ← Hồ sơ, kết bạn, tin nhắn, trạng thái online
-│       ├── pages.js       ← Trang chủ, giới thiệu, điều khoản, liên hệ, dashboard, Green Impact, quản trị
-│       ├── events.js      ← Lắng nghe sự kiện (đồng bộ giữa các tab)
-│       └── main.js        ← Điểm khởi động
-├── dist/index.html        ← Bản gộp 1 file ( tạo bằng tools/build_single_file.py)
+├── site/                     ← Toàn bộ website (đưa thư mục này lên GitHub Pages / Netlify)
+│   ├── index.html
+│   ├── css/  theme.css · base.css · components.css · pages.css
+│   └── js/
+│       ├── firebase-config.js ← ★ BẠN ĐIỀN thông tin Firebase vào file này
+│       ├── firebase.js        ← Nối Firebase: đăng nhập, lưu dữ liệu, cập nhật trực tiếp
+│       ├── config.js          ← Danh mục đồ dùng, ảnh nền đăng nhập
+│       ├── state.js · utils.js · storage.js · router.js
+│       ├── auth.js · market.js · borrow.js · needs.js
+│       ├── notifications.js · social.js · pages.js · events.js · main.js
+├── dist/index.html           ← Bản gộp 1 file (tạo bằng tools/build_single_file.py)
 ├── tools/build_single_file.py
-├── firestore.rules  storage.rules  .env.example
+├── firestore.rules           ← Luật bảo mật dán vào Firebase
 └── README.md
 ```
 
-**Muốn sửa gì thì mở file nào:**
-- Đổi màu, kiểu chữ → `css/theme.css`, `css/base.css`
-- Đổi mật khẩu admin, danh mục đồ dùng → `js/config.js`
-- Sửa trang Kho đồ dùng → `js/market.js` và `css/pages.css`
-- Sửa tin nhắn, kết bạn → `js/social.js`
-- Nối Firebase → thay các hàm trong `js/storage.js` và đăng nhập trong `js/auth.js`
+> Các file JS dùng chung biến toàn cục (không dùng import), nên **đừng đổi thứ tự các thẻ `<script>`** trong `index.html`.
 
-> Mỗi file JS là một slice chức năng và dùng chung biến toàn cục (không dùng import), nên **thứ tự nạp trong `index.html` quan trọng**: không đổi thứ tự các thẻ `<script>`.
+## Nối Firebase (làm từng bước, không cần biết lập trình)
 
-## 1. Cài đặt
-```bash
-npm create vite@latest campusshare -- --template react-ts
-cd campusshare
-npm i react-router-dom firebase react-hook-form zod @hookform/resolvers lucide-react framer-motion recharts sonner qrcode.react html5-qrcode
-npm i -D tailwindcss postcss autoprefixer && npx tailwindcss init -p
-cp .env.example .env
-npm run dev
-```
-Không có `.env` => Demo Mode (dữ liệu mẫu, không lưu lên Firebase).
+**Bước 1 – Tạo dự án.** Vào console.firebase.google.com, đăng nhập Google → **Create a project / Add project** → đặt tên `campusshare` → tắt Google Analytics → Create. Dùng gói **Spark (miễn phí)**, không cần thẻ.
 
-## 2. Cấu hình Firebase từ đầu
-1. Vào console.firebase.google.com > Add project.
-2. Build > Authentication > Sign-in method: bật **Email/Password**.
-3. Build > Firestore Database > Create (chọn region gần Việt Nam, ví dụ `asia-southeast1`).
-4. Build > Storage > Get started.
-5. Project settings > Add app (Web) > chép config vào `.env`.
-6. Nâng cấp gói Blaze nếu cần dùng Cloud Functions.
+**Bước 2 – Bật đăng nhập.** Menu trái **Build → Authentication → Get started → Sign-in method → Email/Password → bật Enable → Save**.
 
-## 3. Deploy rules
-```bash
-npm i -g firebase-tools && firebase login && firebase init   # chọn Firestore, Storage, Functions, Hosting
-firebase deploy --only firestore:rules,storage
-```
+**Bước 3 – Tạo cơ sở dữ liệu.** **Build → Firestore Database → Create database** → giữ `(default)` → chọn vị trí `asia-southeast1` (Singapore) → chọn **Production mode** → Create.
 
-## 4. Phân quyền (quan trọng)
-`role` và `schoolId` nằm trong **custom claims**, chỉ đặt bằng Admin SDK trong Cloud Functions hoặc script chạy trên máy bạn:
+**Bước 4 – Dán luật bảo mật.** Trong Firestore, mở tab **Rules**, xóa hết nội dung cũ, mở file `firestore.rules` trong thư mục này, copy toàn bộ rồi dán vào → bấm **Publish**.
+
+**Bước 5 – Lấy thông tin kết nối.** Bấm bánh răng ⚙ → **Project settings** → kéo xuống **Your apps** → bấm biểu tượng web **`</>`** → đặt tên bất kỳ → **Register app**. Màn hình hiện đoạn `const firebaseConfig = { apiKey: "...", authDomain: "...", ... }`. Giữ trang này mở.
+
+**Bước 6 – Điền vào website.** Mở file `site/js/firebase-config.js`, thay các dấu `''` bằng giá trị tương ứng (giữ nguyên dấu nháy). Ví dụ:
 ```js
-admin.auth().setCustomUserClaims(uid, { role: 'admin', schoolId: 'lequydon' });
+const FIREBASE_CONFIG={apiKey:'AIza...',authDomain:'campusshare-xxxx.firebaseapp.com',projectId:'campusshare-xxxx',storageBucket:'campusshare-xxxx.appspot.com',messagingSenderId:'123456',appId:'1:123456:web:abc'};
 ```
-Tạo Super Admin đầu tiên bằng script này, không bao giờ qua frontend.
+Nếu website đã nằm trên GitHub: mở file này trên GitHub → bấm biểu tượng bút chì ✏ → sửa → **Commit changes**. Đợi 1–2 phút để GitHub Pages cập nhật.
 
-## 5. Cloud Functions cần viết (các rule đang chặn ghi từ client)
-`approveRequest`, `rejectRequest`, `confirmHandover(token)`, `confirmReturn`, `awardPoints`, `markOverdue` (scheduled), `matchNeeds` (trigger khi tạo item).
-Mỗi hàm phải kiểm tra: người gọi là người tham gia, trạng thái hợp lệ, token QR đúng/chưa dùng/chưa hết hạn.
+**Bước 7 – Cho phép tên miền.** Firebase → **Authentication → Settings → Authorized domains → Add domain** → nhập tên miền trang của bạn (ví dụ `tenban.github.io`). Thiếu bước này đăng nhập sẽ báo lỗi.
 
-## 6. Deploy
-- Firebase Hosting: `npm run build && firebase deploy --only hosting`
-- Vercel: import repo, thêm các biến `VITE_FIREBASE_*`, Framework = Vite.
+**Bước 8 – Tạo tài khoản admin.**
+1. Firebase → **Authentication → Users → Add user**: email `admin@campusshare.app`, mật khẩu do bạn chọn (tối thiểu 6 ký tự, hãy chọn mật khẩu mạnh).
+2. Mở website, ở trang đăng nhập nhập `admin` và mật khẩu vừa tạo (website tự hiểu `admin` là `admin@campusshare.app`).
+3. Vào **Firestore Database → Data → users**, bấm vào tài khoản vừa xuất hiện, sửa trường `role` từ `student` thành `super` → Update.
+4. Đăng xuất rồi đăng nhập lại: bạn có quyền quản trị.
 
-## Giới hạn hiện tại
-Rules và tài liệu đã sẵn sàng; Cloud Functions và bản React/TS đầy đủ chưa được viết. Rules chưa được kiểm thử bằng Firebase Emulator.
+**Cách đăng nhập:** học sinh đăng ký bằng email hoặc số điện thoại (10 số) rồi đăng nhập bằng đúng thông tin đó. Số điện thoại chỉ dùng làm tên đăng nhập, không gửi SMS.
+
+## Chế độ Firebase lưu những gì
+
+Tài khoản và hồ sơ, bài đăng (kèm ảnh), yêu cầu mượn/trả, đánh giá, thông báo, bạn bè, tin nhắn, nhu cầu, báo cáo, trạng thái online. Dữ liệu cập nhật trực tiếp giữa các máy.
+
+**Ảnh** được thu nhỏ rồi lưu thẳng trong Firestore (không dùng Firebase Storage vì Storage yêu cầu gói trả phí). Tổng ảnh mỗi bài giới hạn khoảng 900 KB.
+
+## Giới hạn cần biết (gói miễn phí, không dùng Cloud Functions)
+
+- Các kiểm tra như "chỉ hai bên được xác nhận giao dịch", điểm Green Points, mã QR… chạy ở trình duyệt, luật Firestore chỉ chặn được một phần. Một người rành kỹ thuật có thể gian lận điểm hoặc đọc mã QR của giao dịch (yêu cầu mượn đọc được với mọi tài khoản đã đăng nhập). Phù hợp để thử nghiệm trong một trường; muốn chặt chẽ hơn cần Cloud Functions (gói Blaze).
+- Hạn mức miễn phí Firestore khoảng 50.000 lượt đọc và 20.000 lượt ghi mỗi ngày; trường nhỏ dùng thử là đủ, trường lớn có thể hết hạn mức giữa ngày.
+- Quên mật khẩu chỉ gửi email thật cho tài khoản đăng ký bằng email; tài khoản số điện thoại cần admin hỗ trợ.
+- Mã nguồn kết nối Firebase đã được kiểm thử với một Firebase giả lập, **chưa chạy thử với Firebase thật**. Nếu gặp lỗi, mở trang, bấm F12 → tab Console, chụp màn hình các dòng đỏ gửi lại để được sửa.
+
+**Muốn sửa gì thì mở file nào:** màu sắc → `css/theme.css`; danh mục đồ dùng → `js/config.js`; trang Kho đồ dùng → `js/market.js` + `css/pages.css`; kết bạn/tin nhắn → `js/social.js`; kết nối dữ liệu → `js/firebase.js`.

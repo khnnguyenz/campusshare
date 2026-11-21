@@ -1,3 +1,6 @@
+"""Gộp thư mục site/ thành MỘT file dist/index.html (CSS + JS nhúng sẵn).
+Chạy:  python3 tools/build_single_file.py
+Chỉ cần khi bạn muốn có bản 1 file; deploy thư mục site/ trực tiếp cũng được."""
 import re, os
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 site = os.path.join(root, 'site')
