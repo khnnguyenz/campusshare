@@ -47,7 +47,7 @@ import {
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAlWrG1JGHCVL7uwDhG1jphlMYY4kj8BE",
+  apiKey: "AIzaSyAlWrG1JGHCV7L7uwDhG1jphlMYY4kj8BE",
   authDomain: "campusshare-63746.firebaseapp.com",
   projectId: "campusshare-63746",
   storageBucket: "campusshare-63746.firebasestorage.app",
