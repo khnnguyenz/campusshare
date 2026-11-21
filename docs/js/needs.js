@@ -1,7 +1,41 @@
-// Nhu cầu của tôi và gợi ý thông minh (Smart Matching)
+function match(n) {
+  return items
+    .filter(
+      (i) =>
+        i.status == "Available" &&
+        i.owner != n.user &&
+        (i.name.toLowerCase().includes(n.kw.toLowerCase()) ||
+          (n.cat && i.cat == n.cat)),
+    )
+    .sort(
+      (a, b) =>
+        (USERS[b.owner]?.school == USERS[n.user].school) -
+        (USERS[a.owner]?.school == USERS[n.user].school),
+    );
+}
 
-function match(n){return items.filter(i=>i.status=='Available'&&i.owner!=n.user&&(i.name.toLowerCase().includes(n.kw.toLowerCase())||(n.cat&&i.cat==n.cat))).sort((a,b)=>(USERS[b.owner]?.school==USERS[n.user].school)-(USERS[a.owner]?.school==USERS[n.user].school))}
+function needsV() {
+  return `<h2>Nhu cầu của tôi</h2><div class="card bar"><input id="n_k" placeholder="VD: máy tính Casio tuần tới"><select id="n_c"><option value="">Mọi danh mục</option>${CATS.map((c) => `<option>${c}</option>`).join("")}</select><button class="btn" onclick="addNeed()">Lưu nhu cầu</button></div><br>${
+    needs
+      .filter((n) => n.user == cur.id)
+      .map((n) => {
+        const m = match(n);
+        return `<div class="card" style="margin-bottom:12px"><div class="row"><b>${esc(n.kw)}</b><button class="btn r" onclick="needs.splice(needs.indexOf(needs.find(x=>x.id=='${n.id}')),1);saveNeeds();render()">Xóa</button></div><p class="mu">Gợi ý hiện có: ${m.length}</p><div class="grid">${m.map((i) => `<div class="card"><img class="im" alt="" src="${pic(i)}" onclick="detail('${i.id}')"><b>${esc(i.name)}</b></div>`).join("")}</div></div>`;
+      })
+      .join("") ||
+    '<p class="mu">Chưa có nhu cầu nào. Khi có đồ phù hợp được đăng, bạn sẽ nhận thông báo.</p>'
+  }`;
+}
 
-function needsV(){return `<h2>Nhu cầu của tôi</h2><div class="card bar"><input id="n_k" placeholder="VD: máy tính Casio tuần tới"><select id="n_c"><option value="">Mọi danh mục</option>${CATS.map(c=>`<option>${c}</option>`).join('')}</select><button class="btn" onclick="addNeed()">Lưu nhu cầu</button></div><br>${needs.filter(n=>n.user==cur.id).map(n=>{const m=match(n);return `<div class="card" style="margin-bottom:12px"><div class="row"><b>${esc(n.kw)}</b><button class="btn r" onclick="needs.splice(needs.indexOf(needs.find(x=>x.id=='${n.id}')),1);saveNeeds();render()">Xóa</button></div><p class="mu">Gợi ý hiện có: ${m.length}</p><div class="grid">${m.map(i=>`<div class="card"><img class="im" alt="" src="${pic(i)}" onclick="detail('${i.id}')"><b>${esc(i.name)}</b></div>`).join('')}</div></div>`}).join('')||'<p class="mu">Chưa có nhu cầu nào. Khi có đồ phù hợp được đăng, bạn sẽ nhận thông báo.</p>'}`}
-
-function addNeed(){const k=$('#n_k').value.trim();if(k.length<2)return toast('Nhập nhu cầu');needs.push({id:'n'+Date.now(),user:cur.id,kw:k.split(' ').slice(0,2).join(' '),cat:$('#n_c').value});saveNeeds();render()}
+function addNeed() {
+  const k = $("#n_k").value.trim();
+  if (k.length < 2) return toast("Nhập nhu cầu");
+  needs.push({
+    id: "n" + Date.now(),
+    user: cur.id,
+    kw: k.split(" ").slice(0, 2).join(" "),
+    cat: $("#n_c").value,
+  });
+  saveNeeds();
+  render();
+}

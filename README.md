@@ -8,7 +8,7 @@ Nền tảng chia sẻ đồ dùng học tập cho học sinh THPT.
 
 ```
 campusshare/
-├── site/                     ← Toàn bộ website (đưa thư mục này lên GitHub Pages / Netlify)
+├── docs/                     ← Toàn bộ website
 │   ├── index.html
 │   ├── css/  theme.css · base.css · components.css · pages.css
 │   └── js/

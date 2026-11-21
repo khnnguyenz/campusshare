@@ -9,18 +9,13 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/users/$(uid()))
         && get(/databases/$(database)/documents/users/$(uid())).data.role == 'super';
     }
-    // Chỉ cho phép thay đổi đúng các trường này
     function only(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
-
-    // Hồ sơ người dùng: ai cũng xem được tên/trường/lớp; chỉ tự sửa hồ sơ mình, KHÔNG tự đổi role
     match /users/{id} {
       allow read: if true;
       allow create: if signedIn() && uid() == id && request.resource.data.role == 'student';
       allow update: if (signedIn() && uid() == id && request.resource.data.role == resource.data.role) || isAdmin();
       allow delete: if isAdmin();
     }
-
-    // Đồ dùng: chủ bài được sửa/xóa; người khác chỉ được tăng lượt xem
     match /items/{id} {
       allow read: if true;
       allow create: if signedIn() && request.resource.data.owner == uid();
@@ -28,15 +23,12 @@ service cloud.firestore {
       allow delete: if signedIn() && (resource.data.owner == uid() || isAdmin());
     }
 
-    // Yêu cầu mượn: người mượn tạo; hai bên tham gia cập nhật
     match /borrowRequests/{id} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data['from'] == uid() && request.resource.data.st == 'Pending';
       allow update: if signedIn() && (resource.data['from'] == uid() || resource.data.to == uid() || isAdmin());
       allow delete: if isAdmin();
     }
-
-    // Đánh giá: mỗi người chỉ một đánh giá cho mỗi giao dịch (ID = giaodich_nguoidanhgia), không sửa/xóa
     match /reviews/{id} {
       allow read: if true;
       allow create: if signedIn() && request.resource.data.by == uid()
@@ -45,7 +37,6 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Thông báo: chỉ người nhận đọc/sửa/xóa; ai đăng nhập cũng gửi được
     match /notifications/{id} {
       allow read, update, delete: if signedIn() && resource.data.to == uid();
       allow create: if signedIn();
@@ -56,8 +47,6 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.a == uid();
       allow update, delete: if signedIn() && (resource.data.a == uid() || resource.data.b == uid());
     }
-
-    // Tin nhắn: chỉ hai người trong cuộc đọc được; người nhận chỉ được đánh dấu đã đọc
     match /messages/{id} {
       allow read: if signedIn() && (resource.data.f == uid() || resource.data.t == uid());
       allow create: if signedIn() && request.resource.data.f == uid();
@@ -71,13 +60,11 @@ service cloud.firestore {
       allow update, delete: if signedIn() && resource.data.user == uid();
     }
 
-    // Báo cáo: ai cũng gửi được, chỉ admin xem và xử lý
     match /reports/{id} {
       allow create: if signedIn() && request.resource.data.by == uid();
       allow read, update, delete: if isAdmin();
     }
 
-    // Trạng thái online
     match /presence/{id} {
       allow read: if signedIn();
       allow write: if signedIn() && uid() == id;
