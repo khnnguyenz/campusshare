@@ -43,7 +43,7 @@ campusshare/
 - Sửa tin nhắn, kết bạn → `js/social.js`
 - Nối Firebase → thay các hàm trong `js/storage.js` và đăng nhập trong `js/auth.js`
 
-> Mỗi file JS là một "lát cắt" chức năng và dùng chung biến toàn cục (không dùng import), nên **thứ tự nạp trong `index.html` quan trọng**: không đổi thứ tự các thẻ `<script>`.
+> Mỗi file JS là một slice chức năng và dùng chung biến toàn cục (không dùng import), nên **thứ tự nạp trong `index.html` quan trọng**: không đổi thứ tự các thẻ `<script>`.
 
 ## 1. Cài đặt
 ```bash
