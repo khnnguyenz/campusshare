@@ -1,7 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
-    // Role & school lấy từ custom claims (chỉ Cloud Functions/Admin SDK được đặt)
+   
     function signedIn() { return request.auth != null; }
     function role() { return request.auth.token.role; }
     function isSuper() { return signedIn() && role() == 'super'; }
@@ -14,7 +14,6 @@ service cloud.firestore {
       allow read: if isMe(uid) || isSuper() || isSchoolAdmin(resource.data.schoolId);
       allow create: if isMe(uid) && request.resource.data.role == 'student'
         && request.resource.data.greenPoints == 0 && request.resource.data.verified == false;
-      // Student không được đổi role, trường, điểm, trạng thái xác thực/khóa
       allow update: if (isMe(uid) && unchanged(['role','schoolId','greenPoints','verified','locked','badges']))
         || isSchoolAdmin(resource.data.schoolId) && unchanged(['role','schoolId','greenPoints'])
         || isSuper();
@@ -37,13 +36,13 @@ service cloud.firestore {
         && request.resource.data.status == 'Available'
         && request.resource.data.images.size() <= 5
         && request.resource.data.name is string && request.resource.data.name.size() >= 3;
-      // Chỉ chủ sở hữu sửa/xóa; status do Cloud Functions quản lý
+
       allow update: if (resource.data.ownerId == request.auth.uid && unchanged(['ownerId','schoolId','status']))
         || isSchoolAdmin(resource.data.schoolId) || isSuper();
       allow delete: if resource.data.ownerId == request.auth.uid || isSchoolAdmin(resource.data.schoolId) || isSuper();
     }
 
-    // Yêu cầu mượn: chỉ người mượn tạo (Pending); duyệt/từ chối/QR qua Cloud Functions
+
     match /borrowRequests/{id} {
       allow read: if signedIn() && (resource.data.borrowerId == request.auth.uid
         || resource.data.ownerId == request.auth.uid || isSchoolAdmin(resource.data.schoolId)) || isSuper();
@@ -52,7 +51,7 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Giao dịch + token QR: ghi 100% qua Cloud Functions (kiểm tra người tham gia & trạng thái)
+
     match /transactions/{id} {
       allow read: if signedIn() && (request.auth.uid in resource.data.participants
         || isSchoolAdmin(resource.data.schoolId)) || isSuper();
@@ -92,7 +91,7 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
-    // Điểm: học sinh chỉ đọc lịch sử của mình, không được tự ghi
+
     match /pointsHistory/{id} {
       allow read: if signedIn() && (resource.data.userId == request.auth.uid || isSchoolAdmin(resource.data.schoolId)) || isSuper();
       allow write: if false;
