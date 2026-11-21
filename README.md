@@ -1,14 +1,14 @@
 # CampusShare – Hướng dẫn cấu hình & triển khai
 
-> **Chạy thử:** mở file `site/index.html` bằng trình duyệt (Chrome/Edge). Tài khoản quản trị duy nhất: `admin` / `admin123`.
+> **Chạy thử:** mở file `site/index.html` bằng trình duyệt (Chrome/Edge/Firefox...). Tài khoản quản trị duy nhất: `admin` / `admin123`.
 >
-> ⚠️ **Bảo mật:** mật khẩu admin nằm trong `site/js/config.js` (phía trình duyệt) nên ai xem mã cũng thấy, và dữ liệu chỉ lưu trên từng trình duyệt. Trước khi dùng thật cho cả trường, hãy chuyển sang Firebase Authentication + Firestore theo hướng dẫn bên dưới.
+> ⚠️ **Bảo mật:** mật khẩu admin nằm trong `site/js/config.js` (phía trình duyệt) nên ai xem mã cũng thấy, và dữ liệu chỉ lưu trên từng trình duyệt.
 
 ## Cấu trúc thư mục
 
 ```
 campusshare/
-├── site/                  ← Toàn bộ website (kéo thả thư mục này lên Netlify / GitHub Pages)
+├── site/                  ← Toàn bộ website
 │   ├── index.html         ← Khung trang, nạp các file CSS và JS
 │   ├── css/
 │   │   ├── theme.css      ← Màu sắc: chế độ tối (mặc định) và sáng
@@ -30,7 +30,7 @@ campusshare/
 │       ├── pages.js       ← Trang chủ, giới thiệu, điều khoản, liên hệ, dashboard, Green Impact, quản trị
 │       ├── events.js      ← Lắng nghe sự kiện (đồng bộ giữa các tab)
 │       └── main.js        ← Điểm khởi động
-├── dist/index.html        ← Bản gộp 1 file (tạo bằng tools/build_single_file.py)
+├── dist/index.html        ← Bản gộp 1 file ( tạo bằng tools/build_single_file.py)
 ├── tools/build_single_file.py
 ├── firestore.rules  storage.rules  .env.example
 └── README.md
