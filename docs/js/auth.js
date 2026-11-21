@@ -26,10 +26,6 @@ function authError(error) {
   return errors[code] || "Có lỗi xảy ra: " + code;
 }
 
-// ==========================================
-// LOAD USER PROFILE FROM FIRESTORE
-// ==========================================
-
 async function login(id, welcome = true) {
   try {
     const { db, dbApi } = window.CS;
@@ -143,6 +139,9 @@ async function doReg() {
   const password = $("#r_p").value;
 
   const school = $("#r_s").value.trim() || "—";
+
+  const schoolId = "THPT_LE_QUY_DON";
+
   const cls = $("#r_c").value.trim() || "—";
 
   if (name.length < 2) {
@@ -170,7 +169,7 @@ async function doReg() {
 
     const uid = credential.user.uid;
 
-    // Cập nhật tên hiển thị trong Firebase Auth
+  
     await authApi.updateProfile(credential.user, {
       displayName: name
     });
@@ -181,8 +180,13 @@ async function doReg() {
       email,
       role: "student",
       school,
+      schoolId: "",
       cls,
       pts: 0,
+      greenPoints: 0,
+      verified: false,
+      locked: false,
+      badges: [],
       createdAt: dbApi.serverTimestamp()
     };
 
