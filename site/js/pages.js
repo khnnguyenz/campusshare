@@ -1,0 +1,195 @@
+function home() {
+  const stu = Object.values(USERS).filter((u) => u.role == "student").length,
+    done = reqs.filter((r) => r.st == "Completed").length;
+  const C = (a, b) =>
+    `<div class="card rv"><b>${a}</b><p class="mu">${b}</p></div>`;
+  return `<div class="hero"><span class="tag">Một món đồ nhàn rỗi – Một người cần được giúp đỡ</span><h1>Chia sẻ tri thức.<br>Kết nối cộng đồng.</h1><p class="mu">Mượn, cho mượn và tái sử dụng đồ dùng học tập ngay trong trường của bạn.</p><p><button class="btn" onclick="go('market')">Khám phá ngay</button> <button class="btn g" onclick="cur?go('dash'):regModal()">Tham gia CampusShare</button> </p></div>
+ ${(() => {
+   const L = items
+     .slice()
+     .sort((a, b) => b.t - a.t)
+     .slice(0, 4);
+   return L.length
+     ? `<h2 class="c rv" style="margin-top:0">Đồ dùng mới đăng</h2><div class="grid">${L.map((i, k) => `<div class="card fi" style="animation-delay:${k * 0.5}s"><img class="im" loading="lazy" alt="" src="${pic(i)}" onclick="detail('${i.id}')"><b>${esc(i.name)}</b><br><span class="tag">${i.cat}</span></div>`).join("")}</div>`
+     : `<div class="card" style="text-align:center;max-width:520px;margin:0 auto"><b>Chưa có đồ dùng nào</b><p class="mu">Hãy là người đầu tiên chia sẻ một món đồ cho cộng đồng.</p><button class="btn g" onclick="newItem()">+ Đăng đồ của bạn</button></div>`;
+ })()}
+ <h2 class="c rv">Vấn đề hiện nay</h2><div class="grid">${C("🗑️ Lãng phí", "Nhiều đồ dùng học tập bị bỏ không dùng sau một năm học.")}${C("🔍 Khó tìm", "Học sinh cần một món đồ trong thời gian ngắn nhưng không biết hỏi ai.")}${C("💸 Tốn kém", "Mua mới cho nhu cầu dùng một lần là không cần thiết.")}</div>
+ <h2 class="c rv">Giải pháp của CampusShare</h2><div class="grid">${C("🔎 Smart Matching", "Gợi ý đồ dùng theo nhu cầu, ưu tiên cùng trường.")}${C("📱 QR Borrowing", "Xác nhận bàn giao bằng QR và xác nhận của hai bên.")}${C("🌱 Green Points", "Tích điểm uy tín khi chia sẻ và trả đúng hạn.")}${C("🤝 Trusted Community", "Mỗi trường một cộng đồng riêng, có quản trị viên.")}</div>
+ <h2 class="c rv">Cách hoạt động</h2><div class="grid">${[
+   ["1", "Đăng đồ", "Chụp ảnh, mô tả và đăng món đồ bạn muốn chia sẻ."],
+   ["2", "Tìm kiếm", "Lọc theo danh mục, tình trạng hoặc lưu nhu cầu."],
+   ["3", "Gửi yêu cầu", "Chọn ngày nhận, ngày trả và gửi lời nhắn."],
+   ["4", "Nhận và trả đồ", "Gặp nhau, xác nhận bằng QR, trả đồ đúng hạn."],
+ ]
+   .map(
+     (s) =>
+       `<div class="card rv"><div class="step">${s[0]}</div><b>${s[1]}</b><p class="mu">${s[2]}</p></div>`,
+   )
+   .join("")}</div>
+ <h2 class="c rv">Tác động cộng đồng</h2><div class="grid rv">${[
+   ["Đồ dùng", items.length],
+   ["Học sinh", stu],
+   ["Giao dịch hoàn tất", done],
+ ]
+   .map(
+     (x) =>
+       `<div class="card" style="text-align:center"><div class="stat" data-n="${x[1]}">0</div><div class="mu">${x[0]}</div></div>`,
+   )
+   .join(
+     "",
+   )}</div><p class="mu" style="text-align:center">Số liệu cập nhật theo hoạt động gần đây.</p>
+ <h2 class="c rv">Câu hỏi thường gặp</h2><div class="rv" style="max-width:700px;margin:auto">${[
+   [
+     "CampusShare có miễn phí không?",
+     "Có. Việc cho mượn và tặng đều miễn phí.",
+   ],
+   [
+     "Làm sao để biết người mượn đáng tin?",
+     "Qua điểm uy tín, đánh giá sau giao dịch và xác nhận của hai bên.",
+   ],
+   [
+     "QR dùng để làm gì?",
+     "QR chỉ xác thực giao dịch trong hệ thống; hai bên vẫn cần xác nhận bàn giao.",
+   ],
+   [
+     "Dữ liệu có bị lộ không?",
+     "Thông tin chỉ hiển thị trong cộng đồng trường; QR không chứa thông tin cá nhân.",
+   ],
+ ]
+   .map(
+     (q) =>
+       `<details><summary>${q[0]}</summary><p class="mu">${q[1]}</p></details>`,
+   )
+   .join("")}</div>${foot()}`;
+}
+
+function foot() {
+  return `<footer><b>${logo(24)} CampusShare</b><p class="mu">Mỗi lần chia sẻ là một lần giảm lãng phí.</p><a onclick="go('about')">Giới thiệu</a><a onclick="go('terms')">Điều khoản sử dụng</a><a onclick="go('privacy')">Chính sách quyền riêng tư</a><a onclick="go('contact')">Liên hệ</a></footer>`;
+}
+
+function pageWrap(t, h) {
+  return `<div style="max-width:720px;margin:auto"><h2>${t}</h2>${h}</div>${foot()}`;
+}
+
+function aboutV() {
+  return pageWrap(
+    "Giới thiệu",
+    '<p>CampusShare là nền tảng chia sẻ, cho mượn và tái sử dụng đồ dùng học tập trong cộng đồng học sinh THPT, do học sinh xây dựng cho cuộc thi khởi nghiệp.</p><p class="mu">Sứ mệnh: giảm lãng phí, giúp nhau tiếp cận đồ dùng học tập và xây dựng thói quen sống xanh trong trường học.</p>',
+  );
+}
+
+function termsV() {
+  return pageWrap(
+    "Điều khoản sử dụng",
+    "<ul><li>Chỉ đăng đồ dùng thuộc quyền sở hữu của bạn, an toàn và phù hợp học đường.</li><li>Giao dịch diễn ra tại địa điểm trong trường đã thống nhất.</li><li>Người mượn giữ gìn và trả đúng hạn.</li><li>Vi phạm đã được xác minh có thể bị trừ điểm hoặc khóa tài khoản.</li></ul>",
+  );
+}
+
+function privacyV() {
+  return pageWrap(
+    "Chính sách quyền riêng tư",
+    "<ul><li>Chúng tôi chỉ thu thập thông tin cần thiết: họ tên, email/SDT, trường, lớp.</li><li>Mật khẩu được băm, không lưu dạng chữ thường.</li><li>Mã QR không chứa thông tin cá nhân.</li><li>Quản trị viên chỉ xem dữ liệu thuộc trường mình.</li></ul>",
+  );
+}
+
+function contactV() {
+  return pageWrap(
+    "Liên hệ",
+    '<div class="card"><label>Họ tên</label><input id="c_n"><label>Email</label><input id="c_e" type="email"><label>Nội dung</label><textarea id="c_m" rows="4"></textarea><button class="btn" onclick="sendContact()">Gửi liên hệ</button></div>',
+  );
+}
+
+function sendContact() {
+  const n = $("#c_n").value.trim(),
+    e = $("#c_e").value.trim(),
+    m = $("#c_m").value.trim();
+  if (!n || !e.includes("@") || m.length < 5)
+    return toast("Nhập họ tên, email hợp lệ và nội dung");
+  try {
+    const L = JSON.parse(localStorage.getItem("cs_msgs") || "[]");
+    L.push({ n, e, m, t: Date.now() });
+    localStorage.setItem("cs_msgs", JSON.stringify(L));
+  } catch (x) {}
+  ["c_n", "c_e", "c_m"].forEach((i) => ($("#" + i).value = ""));
+  toast("Đã ghi nhận liên hệ của bạn");
+}
+
+function dash() {
+  const my = items.filter((i) => i.owner == cur.id),
+    lent = reqs.filter((r) => r.to == cur.id && r.st == "Completed").length,
+    bor = reqs.filter((r) => r.from == cur.id && r.st == "Completed").length;
+  return `<h2>Xin chào, ${esc(cur.name)} 👋</h2><p class="mu">${cur.school} · Lớp ${cur.cls}</p><div class="grid">${[
+    ["Đồ đã đăng", my.length],
+    ["Lượt cho mượn", lent],
+    ["Lượt mượn", bor],
+    ["Green Points", cur.pts],
+  ]
+    .map(
+      (x) =>
+        `<div class="card"><div class="mu">${x[0]}</div><div class="stat">${x[1]}</div></div>`,
+    )
+    .join(
+      "",
+    )}</div><br><button class="btn" onclick="go('post')">+ Đăng đồ dùng</button> <button class="btn o" onclick="go('market')">Tìm đồ dùng</button><h3>Đồ dùng mới nhất</h3><div class="grid">${items
+    .slice()
+    .sort((a, b) => b.t - a.t)
+    .slice(0, 4)
+    .map(
+      (i) =>
+        `<div class="card"><img class="im" loading="lazy" alt="" src="${pic(i)}" onclick="detail('${i.id}')"><b>${esc(i.name)}</b><br><span class="tag">${i.cat}</span></div>`,
+    )
+    .join("")}</div>`;
+}
+
+function rank() {
+  const U = Object.values(USERS)
+      .filter((u) => u.role == "student")
+      .sort((a, b) => (b.pts || 0) - (a.pts || 0)),
+    done = reqs.filter((r) => r.st == "Completed"),
+    gifts = items.filter((i) => (i.kind || "").includes("Tặng")).length,
+    M = {};
+  done.forEach((r) => {
+    const k = (r.d1 || "").slice(0, 7);
+    if (k) M[k] = (M[k] || 0) + 1;
+  });
+  const ks = Object.keys(M).sort().slice(-6),
+    mx = Math.max(1, ...ks.map((k) => M[k]));
+  return `<h2>Green Impact</h2><p><i>"Mỗi lần chia sẻ là một lần giảm lãng phí."</i></p><div class="grid">${[
+    ["Đồ dùng được chia sẻ", items.length],
+    ["Giao dịch hoàn tất", done.length],
+    ["Đồ được tặng", gifts],
+    ["Học sinh tham gia", U.length],
+  ]
+    .map(
+      (x) =>
+        `<div class="card"><div class="mu">${x[0]}</div><div class="stat">${x[1]}</div></div>`,
+    )
+    .join(
+      "",
+    )}</div><h3>Giao dịch hoàn tất theo tháng</h3><div class="card">${ks.length ? `<div style="display:flex;align-items:flex-end;gap:12px;height:160px">${ks.map((k) => `<div style="flex:1;text-align:center"><div style="background:var(--p);border-radius:8px 8px 0 0;height:${Math.round((M[k] / mx) * 100)}px"></div><small class="mu">${k.slice(5)}/${k.slice(2, 4)} · ${M[k]}</small></div>`).join("")}</div>` : '<p class="mu">Chưa có giao dịch hoàn tất nào.</p>'}</div><h3>Bảng xếp hạng Green Points</h3>${U.map((u, i) => `<div class="card row" style="margin-bottom:8px"><a class="row" style="gap:10px;cursor:pointer" onclick="openUser('${u.id}')"><span>#${i + 1}</span>${av(u, 32)}<span>${esc(u.name)}</span></a><b>${u.pts || 0} điểm</b></div>`).join("") || '<p class="mu">Chưa có học sinh nào.</p>'}`;
+}
+
+function admin() {
+  const c = reqs.filter((r) => r.st == "Completed").length;
+  return `<h2>${cur.role == "super" ? "Super Admin" : "School Admin"} – Thống kê</h2><div class="grid">${[
+    [
+      "Học sinh",
+      Object.values(USERS).filter((u) => u.role == "student").length,
+    ],
+    ["Đồ dùng", items.length],
+    ["Giao dịch", reqs.length],
+    ["Hoàn thành", c],
+    ["Báo cáo", reports.length],
+    [
+      "Tỷ lệ hoàn thành",
+      reqs.length ? Math.round((c / reqs.length) * 100) + "%" : "0%",
+    ],
+  ]
+    .map(
+      (x) =>
+        `<div class="card"><div class="mu">${x[0]}</div><div class="stat">${x[1]}</div></div>`,
+    )
+    .join(
+      "",
+    )}</div><p class="mu">Các công cụ quản lý chi tiết đang được phát triển.</p>`;
+}

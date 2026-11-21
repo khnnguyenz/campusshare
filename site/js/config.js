@@ -1,0 +1,27 @@
+const CATS = [
+  "Sách giáo khoa",
+  "Sách tham khảo",
+  "Máy tính",
+  "Dụng cụ học tập",
+  "Thiết bị điện tử",
+  "Đồ dùng thí nghiệm",
+  "Khác",
+];
+const USERS = {
+  admin: {
+    id: "admin",
+    name: "Quản trị viên",
+    role: "super",
+    school: "CampusShare",
+    cls: "",
+    pts: 0,
+  },
+};
+
+// acc admin
+const ACC = [{ id: "admin", ids: ["admin"], pw: "admin123" }];
+const LBG =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a2410"/><stop offset="1" stop-color="#0e0e0e"/></linearGradient><radialGradient id="l" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#F5A524" stop-opacity=".6"/><stop offset="1" stop-color="#F5A524" stop-opacity="0"/></radialGradient></defs><rect width="1600" height="900" fill="url(#g)"/><rect y="640" width="1600" height="260" fill="#24160b"/><circle cx="1287" cy="300" r="320" fill="url(#l)"/><rect x="180" y="585" width="420" height="55" rx="6" fill="#F27A45"/><rect x="210" y="530" width="370" height="55" rx="6" fill="#F5A524"/><rect x="195" y="475" width="400" height="55" rx="6" fill="#B45309"/><rect x="225" y="420" width="340" height="55" rx="6" fill="#FDE68A"/><path d="M760 640L960 600L1160 640L1160 665L960 628L760 665Z" fill="#f5efe6"/><path d="M960 600V628" stroke="#999" stroke-width="3"/><rect x="1280" y="300" width="14" height="340" fill="#555"/><path d="M1200 300L1374 300L1330 220L1244 220Z" fill="#F5A524"/><rect x="1000" y="560" width="14" height="150" rx="7" transform="rotate(60 1000 560)" fill="#FDE68A"/><g fill="#fff" opacity=".2" font-family="serif" font-size="90"><text x="660" y="250">E = mc²</text><text x="980" y="440">∑ π √x</text><text x="90" y="300">a² + b² = c²</text></g></svg>`,
+  );

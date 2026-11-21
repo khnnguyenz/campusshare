@@ -1,0 +1,227 @@
+function market() {
+  let L = items
+    .filter(
+      (i) =>
+        (!f.q || i.name.toLowerCase().includes(f.q.toLowerCase())) &&
+        (!f.cat || i.cat == f.cat) &&
+        (!f.st || i.status == f.st),
+    )
+    .sort((a, b) => (f.sort == "pop" ? b.views - a.views : b.t - a.t));
+  const fb = (c, t) =>
+    `<button class="fb ${f.cat == c ? "on" : ""}" onclick="f.cat='${c}';render()">${t}</button>`;
+  return `<div class="mh"><h1>KHO <span>ĐỒ DÙNG</span></h1><p>Sách, máy tính, dụng cụ, đồ thí nghiệm — chia sẻ trong cộng đồng học sinh</p></div>
+ <div class="mk"><aside><div class="card"><h3>☰ Bộ lọc</h3>${fb("", "Tất cả")}${CATS.map((c) => fb(c, c)).join("")}<select id="f_st" onchange="f.st=this.value;render()"><option value="">Mọi trạng thái</option><option>Available</option><option>Pending</option><option>Borrowed</option></select><select id="f_sort" onchange="f.sort=this.value;render()"><option value="new">Mới nhất</option><option value="pop">Phổ biến</option></select></div>
+ <div class="promo"><h3>Cần tìm đồ dùng?</h3><p>Lưu nhu cầu để nhận thông báo khi có đồ phù hợp được đăng.</p><button class="btn dk" onclick="cur?go('needs'):loginModal()">Nhu cầu của tôi</button><button class="btn dk" style="margin-top:8px" onclick="newItem()">+ Đăng đồ của bạn</button></div></aside>
+ <section><div class="sb"><div class="se">🔍<input id="f_q" placeholder="Tìm sách, máy tính, dụng cụ…" oninput="f.q=this.value;rs()"></div><div class="vt"><button class="${f.view != "list" ? "on" : ""}" onclick="f.view='grid';render()">▦</button><button class="${f.view == "list" ? "on" : ""}" onclick="f.view='list';render()">☰</button></div></div>
+ <div class="grid gc ${f.view == "list" ? "gl" : ""}">${
+   L.map((i) => {
+     const mine = cur && i.owner == cur.id;
+     return `<div class="card pc"><div class="ph"><img class="im" loading="lazy" alt="" src="${pic(i)}" onclick="detail('${i.id}')"><span class="bd">${esc(i.cond)}</span><button class="hb" onclick="fav('${i.id}')">${i.fav ? "♥" : "♡"}</button></div><div class="pb"><div class="row" style="align-items:flex-start;flex-wrap:nowrap"><div><small class="cat">${i.cat}</small><h3>${esc(i.name)}</h3></div><b class="pr">${(i.kind || "").includes("Tặng") ? "TẶNG" : "MƯỢN"}</b></div><p class="mu by" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><a style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--tx)" onclick="openUser('${i.owner}')" title="Xem hồ sơ">${USERS[i.owner] ? av(USERS[i.owner], 28) : ""}<span>${esc(USERS[i.owner]?.name || "Bạn")}</span></a><span class="tag ${i.status}">${i.status}</span></p><div class="acts">${mine ? `<button class="btn w" onclick="editItem('${i.id}')">Sửa</button>` : `<button class="btn w" ${i.status != "Available" ? "disabled" : ""} onclick="reqForm('${i.id}')">Mượn</button>`}<button class="ib" onclick="detail('${i.id}')">ⓘ</button>${mine || cur?.role == "super" ? `<button class="ib" onclick="del('${i.id}')">🗑</button>` : ""}</div></div></div>`;
+   }).join("") || '<p class="mu">Không có đồ dùng phù hợp.</p>'
+ }</div></section></div>`;
+}
+
+function rs() {
+  const p = $("#f_q").selectionStart;
+  render();
+  const e = $("#f_q");
+  e.focus();
+  e.setSelectionRange(p, p);
+}
+
+function fav(id) {
+  if (!cur) {
+    toast("Hãy đăng nhập để lưu yêu thích");
+    return go("login");
+  }
+  const i = items.find((x) => x.id == id);
+  i.fav = !i.fav;
+  render();
+}
+
+function reqForm(id) {
+  if (!cur) {
+    toast("Hãy đăng nhập để mượn đồ");
+    return go("login");
+  }
+  if (cur.role != "student")
+    return toast("Chỉ tài khoản học sinh mới mượn được đồ");
+  const i = items.find((x) => x.id == id);
+  if (!i) return;
+  if (i.owner == cur.id) return toast("Đây là đồ của bạn");
+  if (USERS[i.owner]?.role == "sample")
+    return toast("Đây là bài mẫu của hệ thống, chưa thể mượn");
+  const today = new Date().toISOString().slice(0, 10);
+  modal(
+    `<h3>Yêu cầu mượn</h3><label>Ngày nhận</label><input type="date" id="d1" min="${today}" value="${today}"><label>Ngày dự kiến trả</label><input type="date" id="d2" min="${today}"><label>Lời nhắn</label><textarea id="msg" rows="3"></textarea><button class="btn" onclick="sendReq('${id}')">Gửi yêu cầu</button>`,
+  );
+}
+
+function detail(id) {
+  const i = items.find((x) => x.id == id);
+  if (!i) return;
+  i.views++;
+  const o = USERS[i.owner],
+    im = i.imgs?.length ? i.imgs : [pic(i)],
+    ok =
+      cur &&
+      cur.id != i.owner &&
+      o &&
+      o.role == "student" &&
+      cur.role == "student";
+  modal(
+    `<img id="big" class="im big" alt="" src="${im[0]}">${im.length > 1 ? `<div class="bar" style="flex-wrap:nowrap;overflow:auto">${im.map((s) => `<img class="th" src="${s}" onclick="$('#big').src=this.src">`).join("")}</div>` : ""}<h3>${esc(i.name)}</h3><span class="tag">${i.cat}</span> <span class="tag ${i.status}">${i.status}</span><a class="card row" style="margin:12px 0;cursor:pointer;justify-content:flex-start;gap:12px" onclick="closeM();openUser('${i.owner}')">${o ? av(o, 44) : ""}<span><b>${esc(o?.name || "Bạn")}</b><br><span class="mu">${esc(o?.school || "")} · Xem hồ sơ</span></span></a><p class="mu">${esc(i.desc)}<br>Tình trạng: ${esc(i.cond)} · ${esc(i.kind || "Cho mượn miễn phí")}<br>Nhận tại: ${esc(i.loc)} · ${i.views} lượt xem · ${new Date(i.t).toLocaleDateString("vi-VN")}</p><div class="bar">${cur && i.owner != cur.id ? `<button class="btn" ${i.status != "Available" ? "disabled" : ""} onclick="closeM();reqForm('${i.id}')">Yêu cầu mượn</button><button class="btn r" onclick="report('${i.id}')">Báo cáo</button>` : ""}${ok ? fbtnM(i.owner) : ""}${!cur ? `<button class="btn" onclick="closeM();loginModal()">Đăng nhập để mượn hoặc nhắn tin</button>` : ""}</div>`,
+  );
+}
+
+function fbtnM(id) {
+  const r = rel(cur.id, id);
+  if (!r)
+    return `<button class="btn g" onclick="addFriend('${id}');closeM()">+ Kết bạn</button>`;
+  if (r.st == "accepted")
+    return `<button class="btn g" onclick="closeM();openChat('${id}')">Nhắn tin</button>`;
+  if (r.a == cur.id)
+    return `<button class="btn o" disabled>Đã gửi lời mời</button>`;
+  return `<button class="btn g" onclick="acceptF('${id}');closeM()">Chấp nhận kết bạn</button>`;
+}
+
+function del(id) {
+  const i = items.find((x) => x.id == id);
+  if (!i || !cur || (i.owner != cur.id && cur.role != "super"))
+    return toast("Bạn không có quyền xóa");
+  if (
+    reqs.some(
+      (r) =>
+        r.item == id &&
+        ["Pending", "Approved", "Active", "Return"].includes(r.st),
+    )
+  )
+    return toast("Đang có giao dịch, chưa thể xóa");
+  if (confirm("Xóa bài đăng này?")) {
+    items = items.filter((x) => x.id != id);
+    save();
+    render();
+    toast("Đã xóa");
+  }
+}
+
+function report(id) {
+  const r = prompt("Lý do báo cáo (đồ dùng không phù hợp, nội dung xấu…):");
+  if (!r || r.trim().length < 5) return toast("Hãy nhập lý do (≥5 ký tự)");
+  reports.push({ item: id, by: cur.id, reason: r.trim() });
+  document.querySelector(".modal")?.remove();
+  toast("Đã gửi báo cáo, quản trị viên sẽ xem xét");
+  render();
+}
+
+function newItem() {
+  if (!cur) {
+    toast("Hãy đăng nhập để đăng đồ");
+    return go("login");
+  }
+  if (cur.role != "student") return toast("Chỉ tài khoản học sinh mới đăng đồ");
+  editId = null;
+  pimgs = [];
+  go("post");
+}
+
+function post() {
+  const e = editId ? items.find((i) => i.id == editId) || {} : {},
+    v = (k, d) => esc(e[k] ?? d),
+    opt = (L, cur2) =>
+      L.map((c) => `<option ${cur2 == c ? "selected" : ""}>${c}</option>`).join(
+        "",
+      );
+  return `<h2>${editId ? "Sửa bài đăng" : "Đăng đồ dùng"}</h2><div class="card" style="max-width:560px"><label>Tên đồ dùng *</label><input id="p_n" maxlength="80" value="${v("name", "")}"><label>Danh mục</label><select id="p_c">${opt(CATS, e.cat)}</select><div class="bar"><div><label>Tình trạng</label><select id="p_s">${opt(["Như mới", "Tốt", "Đã qua sử dụng"], e.cond)}</select></div><div><label>Hình thức chia sẻ</label><select id="p_t">${opt(["Cho mượn miễn phí", "Tặng lại miễn phí"], e.kind)}</select></div></div><label>Thời gian cho mượn dự kiến</label><input id="p_w" value="${v("dur", "1 tuần")}"><label>Mô tả</label><textarea id="p_d" rows="3">${v("desc", "")}</textarea><label>Hình ảnh (tối đa 5)</label><label class="dz" ondragover="event.preventDefault()" ondrop="event.preventDefault();pick(event.dataTransfer.files)">📷 Bấm để chọn hoặc kéo thả ảnh (JPG/PNG/WebP)<input type="file" hidden accept="image/jpeg,image/png,image/webp" multiple onchange="pick(this.files);this.value=''"></label><div id="prev">${pimgs.map(thumb).join("")}</div><label>Địa điểm nhận trong trường *</label><input id="p_l" value="${v("loc", "")}"><label>Ghi chú</label><input id="p_o" value="${v("note", "")}"><div class="bar"><button class="btn g" onclick="addItem()">${editId ? "Lưu thay đổi" : "Đăng bài"}</button>${editId ? '<button class="btn o" onclick="cancelEdit()">Hủy</button>' : ""}</div></div>`;
+}
+
+function addItem() {
+  const n = $("#p_n").value.trim(),
+    l = $("#p_l").value.trim();
+  if (n.length < 3 || !l)
+    return toast("Nhập tên (≥3 ký tự) và địa điểm nhận đồ");
+  const d = {
+    name: n,
+    cat: $("#p_c").value,
+    cond: $("#p_s").value,
+    kind: $("#p_t").value,
+    dur: $("#p_w").value.trim(),
+    desc: $("#p_d").value.trim() || "—",
+    loc: l,
+    note: $("#p_o").value.trim(),
+    imgs: pimgs.slice(),
+  };
+  if (editId) {
+    const i = items.find((x) => x.id == editId);
+    if (!i || i.owner != cur.id) return toast("Bạn không có quyền sửa");
+    Object.assign(i, d);
+    toast("Đã cập nhật bài đăng");
+  } else {
+    items.unshift({
+      id: "i" + Date.now(),
+      owner: cur.id,
+      status: "Available",
+      views: 0,
+      t: Date.now(),
+      fav: false,
+      ...d,
+    });
+    const ni = items[0];
+    needs.forEach((nd) => {
+      if (nd.user != cur.id && match(nd).includes(ni))
+        notify(nd.user, `Có đồ phù hợp nhu cầu "${nd.kw}": ${ni.name}`);
+    });
+    toast("Đã đăng bài – mọi người có thể thấy trong Kho đồ dùng");
+  }
+  editId = null;
+  pimgs = [];
+  save();
+  go("my");
+}
+
+function cancelEdit() {
+  editId = null;
+  pimgs = [];
+  go("my");
+}
+
+function editItem(id) {
+  const i = items.find((x) => x.id == id);
+  if (!i || i.owner != cur.id) return toast("Bạn không có quyền sửa");
+  editId = id;
+  pimgs = (i.imgs || []).slice();
+  go("post");
+}
+
+function thumb(s, i) {
+  return `<div style="position:relative"><img src="${s}"><button class="x" onclick="pimgs.splice(${i},1);prev()">×</button></div>`;
+}
+
+function prev() {
+  $("#prev").innerHTML = pimgs.map(thumb).join("");
+}
+
+async function pick(files) {
+  for (const f of [...files]) {
+    if (pimgs.length >= 5) {
+      toast("Tối đa 5 ảnh");
+      break;
+    }
+    if (
+      !["image/jpeg", "image/png", "image/webp"].includes(f.type) ||
+      f.size > 5242880
+    ) {
+      toast(f.name + ": chỉ nhận JPG/PNG/WebP ≤ 5MB");
+      continue;
+    }
+    const d = await resize(f);
+    if (d) pimgs.push(d);
+    else toast("Không đọc được " + f.name);
+  }
+  prev();
+}
+
+function myV() {
+  const L = items.filter((i) => i.owner == cur.id);
+  return `<div class="row"><h2>Đồ dùng của tôi</h2><button class="btn g" onclick="newItem()">+ Đăng đồ mới</button></div><div class="grid">${L.map((i) => `<div class="card"><img class="im" alt="" src="${pic(i)}" onclick="detail('${i.id}')"><div class="row"><b>${esc(i.name)}</b><span class="tag ${i.status}">${i.status}</span></div><p class="mu">${esc(i.kind || "Cho mượn miễn phí")} · ${i.views} lượt xem · ${(i.imgs || []).length} ảnh</p><div class="bar"><button class="btn o" onclick="editItem('${i.id}')">Sửa</button><button class="btn r" onclick="del('${i.id}')">Xóa</button></div></div>`).join("") || '<p class="mu">Bạn chưa đăng món đồ nào.</p>'}</div>`;
+}

@@ -1,0 +1,24 @@
+let items = [],
+  reqs = [],
+  notes = [],
+  cur = null,
+  page = "home",
+  f = { q: "", cat: "", st: "", sort: "new" };
+let pimgs = [],
+  editId = null;
+let reg = [],
+  friends = [],
+  msgs = [],
+  prof = {},
+  viewId = null,
+  chatWith = null,
+  fsq = "";
+let soundOn = true,
+  npOpen = false,
+  lastN = 0,
+  ac,
+  mcMap = {},
+  keep = false;
+const reports = [],
+  reviews = [],
+  needs = [];
